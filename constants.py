@@ -1,0 +1,49 @@
+import math
+import pygame
+
+
+WINDOW_WIDTH = 1920
+WINDOW_HEIGHT = 1080
+WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT
+
+CAPTION = "Fallowtide"
+FRAMERATE = 60
+
+WHEAT = 0
+FENNEL = 1
+FELLWEED = 2
+MULCH = 3
+BLOOD = 4
+GOAT = 5
+CULTIST = 6
+
+DOWN = 0
+UP = 1
+EITHER = 2
+
+CARD_NAMES = {
+    WHEAT: "Wheat",
+    FENNEL: "Fennel",
+    FELLWEED: "Fellweed",
+    MULCH: "Mulch",
+    BLOOD: "Blood",
+    GOAT: "Goat",
+    CULTIST: "Cultist",
+}
+
+TILE_PRICES = {
+    WHEAT: 10,
+    FENNEL: 20,
+    FELLWEED: 50,
+    MULCH: 0,
+    BLOOD: 0,
+    GOAT: 0,
+    CULTIST: 0
+}
+
+CARD_WIDTH = 250
+CARD_HEIGHT = 350
+CARD_SPACING = 15
+
+CARD_SHAPE_WIDTH = 70
+CARD_SHAPE_SPACING = 7
