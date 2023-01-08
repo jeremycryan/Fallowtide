@@ -20,6 +20,8 @@ class Composter:
         self.squish_amp = 0
         self.since_squish = 999
 
+        self.brrrr = pygame.mixer.Sound("assets/sounds/grinder.ogg")
+
     def update(self, dt, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -35,7 +37,7 @@ class Composter:
     def compost(self, card):
         if card in self.frame.hand.cards:
             self.frame.hand.cards.remove(card)
-            if card.crop in c.COMPOSTS_TO:
+            if card.crop in c.COMPOSTS_TO or card.crop == c.CULTIST:
                 self.frame.discard.cards.append(card)
 
         selected = card
@@ -47,6 +49,10 @@ class Composter:
 
         self.frame.shake(10)
         self.blorp()
+        self.brrrr.play()
+
+        if card.crop == c.CULTIST:
+            self.frame.make_sacrifice()
 
         if not card.crop in c.COMPOSTS_TO:
             return

@@ -1,6 +1,7 @@
 import math
 import pygame
 
+DEBUG = False
 
 WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
@@ -28,7 +29,7 @@ CARD_NAMES = {
     MULCH: "Mulch",
     BLOOD: "Blood",
     GOAT: "Goat",
-    CULTIST: "Cultist",
+    CULTIST: "Offering",
 }
 
 TILE_PRICES = {
@@ -61,7 +62,8 @@ CROP_DESCRIPTIONS = {
     FELLWEED: "Makes soil barren",
     MULCH: "Replenish soil",
     BLOOD: "All is forgiven",
-    GOAT: "Useless in this form"
+    GOAT: "Useless in this form",
+    CULTIST: "It must be willing"
 }
 
 COMPOSTS_TO = {
@@ -104,4 +106,4 @@ LARGE_SHAPES = [
 BUY = 0
 REMOVE = 1
 
-CPS = 4000
+CPS = 45 if not DEBUG else 4000

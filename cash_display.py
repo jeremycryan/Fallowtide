@@ -14,6 +14,9 @@ class CashDisplay:
         self.text = None
         self.back = ImageManager.load("assets/images/ui_back.png")
 
+        self.slimback = pygame.transform.scale(self.back, (self.back.get_width(), self.back.get_height()//2))
+        self.skull = ImageManager.load("assets/images/souls.png")
+
     def update(self, dt, events):
         if self.last_value is not None:
             dv = self.last_value - self.visible_value
@@ -41,3 +44,12 @@ class CashDisplay:
         text = self.font.render(f"Season {self.frame.moon}", 1, (255, 255, 255))
         x += self.moon.get_width() + 20
         surface.blit(text, (x, y - text.get_height()//2))
+
+        if self.frame.skulls > 0:
+            surface.blit(self.slimback, (0, 190), special_flags=pygame.BLEND_MULT)
+            x = 140
+            y = 220
+            surface.blit(self.skull, (x, y-self.skull.get_height()//2), special_flags=pygame.BLEND_ADD)
+            text = self.font.render(f"{self.frame.skulls}", 1, (255, 255, 255))
+            x += self.skull.get_width() + 20
+            surface.blit(text, (x, y-text.get_height()//2))

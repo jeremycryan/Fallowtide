@@ -1,3 +1,4 @@
+import random
 import time
 
 import pygame
@@ -15,8 +16,17 @@ class Doctor:
         self.shade = pygame.Surface((c.WINDOW_SIZE))
         self.shade.fill((0, 0, 0))
 
+        self.sounds = [
+            pygame.mixer.Sound(f"assets/sounds/voice_{n}.ogg") for n in [1, 2, 3, 4, 5, 6, 7]
+        ]
+        for sound in self.sounds:
+            sound.set_volume(0.15)
+        self.advance_sound = pygame.mixer.Sound("assets/sounds/advance_dialog.wav")
+        self.advance_sound.set_volume(0.05)
+
         self.lines = []
         self.since_start_line = 0
+        self.since_blep = 999
 
         self.doctor_surf = ImageManager.load("assets/images/doctor.png")
         self.dialog_background = pygame.surface.Surface((c.WINDOW_WIDTH, 350))
@@ -38,6 +48,10 @@ class Doctor:
 
     def update(self, dt, events):
         self.since_start_line += dt
+        self.since_blep += dt
+        if self.blocking() and self.since_blep > 0.2 and not self.ready_for_next_line():
+            self.since_blep = 0
+            random.choice(self.sounds).play()
         if self.target > self.showing:
             self.showing += dt * 3
             if self.showing > self.target:
@@ -49,8 +63,9 @@ class Doctor:
 
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.target == 1 and self.ready_for_next_line():
-                    self.next_line()
+                if event.button == 1:
+                    if self.target == 1 and self.ready_for_next_line():
+                        self.next_line()
 
     def draw(self, surface, offset=(0, 0)):
 
@@ -143,3 +158,5 @@ class Doctor:
             self.since_start_line = 0
         if not self.lines:
             self.target = 0
+        else:
+            self.advance_sound.play()

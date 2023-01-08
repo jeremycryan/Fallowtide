@@ -90,6 +90,10 @@ class Card:
             goat_surf = ImageManager.load("assets/images/goat.png")
             surface.blit(goat_surf, (x - goat_surf.get_width()//2, y - goat_surf.get_height()//2))
             return
+        if self.crop == c.CULTIST:
+            cultist_surf = ImageManager.load("assets/images/offering.png")
+            surface.blit(cultist_surf, (x - cultist_surf.get_width()//2, y - cultist_surf.get_height()//2))
+            return
 
         min_x = min([xy[0] for xy in self.shape])
         min_y = min([xy[1] for xy in self.shape])
@@ -221,6 +225,8 @@ class Card:
     def get_shop_cost(self):
         if self.crop == c.GOAT:
             return 5000
+        elif self.crop == c.CULTIST:
+            return 12000
         else:
             value = self.value*2.5
             if self.crop == c.FELLWEED:

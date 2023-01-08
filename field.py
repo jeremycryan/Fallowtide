@@ -62,6 +62,7 @@ class Field:
 
                     if not self.shape_placement_valid(selected_card.shape, selected_card.orientation):
                         self.frame.shake(5)
+                        self.frame.cant.play()
                         return
 
                     self.place_here()
@@ -219,8 +220,12 @@ class Field:
                 if tile.contents:
                     for crop in tile.contents:
                         crop_type = crop.crop_type
-                        self.frame.cash += c.TILE_PRICES[crop_type]
-                        self.frame.lifetime_cash += c.TILE_PRICES[crop_type]
+
+                        cash = c.TILE_PRICES[crop_type]
+                        if c.DEBUG:
+                            cash *= 10
+                        self.frame.cash += cash
+                        self.frame.lifetime_cash += cash
 
     def next_day(self):
         for y, row in enumerate(self.tiles):

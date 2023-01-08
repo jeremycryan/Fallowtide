@@ -36,6 +36,7 @@ class Hand():
         self.cards = []
 
         self.has_played_card = False
+        self.has_played_fennel = False
         self.deck = draw_from
         self.draw_from_deck(5)
 
@@ -46,6 +47,8 @@ class Hand():
         self.frame = frame
 
         self.particles = []
+
+        self.plant_sound = pygame.mixer.Sound("assets/sounds/plant_sound.ogg")
 
         for card in self.cards:
             card.hand = self
@@ -101,6 +104,7 @@ class Hand():
             y = selected.get_apparent_position()[1] + random.random() * c.CARD_HEIGHT - c.CARD_HEIGHT//2
             self.particles.append(CardParticle((x, y), (x - selected.x, y - selected.get_apparent_position()[1])))
         self.particles.append(RectParticle((selected.get_apparent_position())))
+        self.plant_sound.play()
 
         if not self.has_played_card:
             self.has_played_card = True
@@ -108,6 +112,15 @@ class Hand():
                 "Very good. The crops have already taken root.",
                 "You have only limited space in this plot. Keep that in mind as you |place |your |remaining |crops.",
                 "I sense this will be a very beneficial relationship for both of us. Farewell for now."
+            ])
+        if not self.has_played_fennel and selected.crop == c.FENNEL:
+            self.has_played_fennel = True
+            self.frame.doctor.add_dialog([
+                "Ah, I see you have expanded to a new crop.",
+                "|Fennel is quite prized by the residents of Fallowtide. Prepared correctly, it can ward against unfriendly demons and spirits.",
+                "In other situations, it may invite them.",
+                "Regardless, its value is considerable, and we will pay you handsomely for its cultivation.",
+                "Farewell for now. May you dream of fire and warm things.",
             ])
 
     def update(self, dt, events):

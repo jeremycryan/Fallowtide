@@ -178,7 +178,7 @@ class Store:
     def get_shop_card(self):
         options = []
 
-        multiplier = 1.7
+        multiplier = 1.7 if not c.DEBUG else 0.1
 
 
         if self.frame.lifetime_cash < 2000 * multiplier:
@@ -219,6 +219,9 @@ class Store:
         if not options:
             options.append(Card(c.WHEAT, shape=((0, 0),), orientation=c.UP))
 
+        if self.frame.lifetime_cash > 75000 * multiplier:
+            return Card(c.CULTIST, shape=((0, 0),), orientation=c.EITHER)
+
         new_card = random.choice(options)
         return new_card
 
@@ -247,6 +250,11 @@ class Store:
             self.raise_up()
 
     def update(self, dt, events):
+        if self.extended < 1:
+            doctor_extended = self.frame.doctor.showing
+            extended = max(doctor_extended, self.extended)
+            pygame.mixer.music.set_volume(1 - 0.85*extended)
+
         speed = 3
         if self.target == c.DOWN:
             self.extended += speed*dt
@@ -266,6 +274,7 @@ class Store:
                     if hovered != None:
                         self.click_card(hovered)
                     elif self.next_season_hovered() and self.mode == c.BUY:
+                        self.frame.doctor.advance_sound.play()
                         self.frame.next_day()
 
         for particle in self.particles[:]:
@@ -299,6 +308,7 @@ class Store:
         self.particles.append(RectParticle((pos)))
 
         self.frame.next_day()
+        self.frame.paper_sound.play()
 
     def try_buy(self, idx):
         if len(self.cards) <= idx:
@@ -307,8 +317,10 @@ class Store:
         card = self.cards[idx]
         if self.frame.cash < card.get_shop_cost():
             self.frame.shake(8)
+            self.frame.cant.play()
             return
 
+        self.frame.paper_sound.play()
         self.frame.cash -= card.get_shop_cost()
         self.frame.discard.cards.append(card)
         self.cards = []
