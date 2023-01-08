@@ -1,23 +1,43 @@
+import random
+
 import pygame
 
 from card import Card
 import constants as c
+from particle import CardParticle, RectParticle
 
 
 class Deck:
     def __init__(self):
         self.cards = []
 
+        self.cards.append(Card(c.WHEAT, shape=((0, 0), (1, 0)), orientation=c.UP))
+        self.cards.append(Card(c.WHEAT, shape=((0, 0), (1, 0)), orientation=c.DOWN))
+        self.cards.append(Card(c.WHEAT, shape=((0, 0), (0, -1)), orientation=c.DOWN))
+        self.cards.append(Card(c.WHEAT, shape=((0, 0), (1, 0)), orientation=c.UP))
+        self.cards.append(Card(c.WHEAT, shape=((0, 0), (1, 0)), orientation=c.DOWN))
+        self.cards.append(Card(c.WHEAT, shape=((0, 0), (0, -1)), orientation=c.DOWN))
+        self.cards.append(Card(c.WHEAT, shape=((0, 0), (0, -1), (1, 0), (-1, 0)), orientation=c.DOWN))
+        self.cards.append(Card(c.WHEAT, shape=((1, 0), (0, 0), (0, -1), (1, -1)), orientation=c.DOWN))
+        self.cards.append(Card(c.WHEAT, shape=((0, 0), (1, 0), (1, -1), (0, -1)), orientation=c.UP))
+        # for i in range(3):
+        #     self.cards.append(Card(c.MULCH, shape=((0, 0),), orientation=c.EITHER))
+        # for i in range(3):
+        #     self.cards.append(Card(c.BLOOD, shape=((0, 0),), orientation=c.EITHER))
 
-class Hand(Deck):
+        self.shuffle()
+
+    def shuffle(self):
+        random.shuffle(self.cards)
+
+
+class Hand():
     def __init__(self, draw_from, frame):
-        super().__init__()
-        self.deck = draw_from
+        self.cards = []
 
-        self.cards.append(Card(c.WHEAT, shape=((0, 0), (1, 0)), orientation=c.UP))
-        self.cards.append(Card(c.WHEAT, shape=((0, 0), (1, 0), (-1, 0), (1, 1), (0, 1), (-1, 1)), orientation=c.UP))
-        self.cards.append(Card(c.WHEAT, shape=((0, 0), (1, 0)), orientation=c.UP))
-        self.cards.append(Card(c.WHEAT, shape=((0, 0), (1, 0)), orientation=c.UP))
+        self.has_played_card = False
+        self.deck = draw_from
+        self.draw_from_deck(5)
 
         self.shade = pygame.Surface((c.WINDOW_WIDTH, c.WINDOW_HEIGHT))
         self.shade.fill((0, 0, 0))
@@ -25,8 +45,22 @@ class Hand(Deck):
 
         self.frame = frame
 
+        self.particles = []
+
         for card in self.cards:
             card.hand = self
+
+    def draw_from_deck(self, amt=1):
+        for i in range(amt):
+            if not len(self.deck.cards):
+                self.deck.cards = self.frame.discard.cards
+                self.frame.discard.cards = []
+                random.shuffle(self.deck.cards)
+            new_card = self.deck.cards.pop()
+            new_card.hand = self
+            new_card.selected = False
+            new_card.x = c.WINDOW_WIDTH + c.CARD_WIDTH//2
+            self.cards.append(new_card)
 
     def draw(self, surface, offset=(0, 0)):
         selected_card = self.selected_card()
@@ -46,11 +80,35 @@ class Hand(Deck):
             if card.pulled > 1 or card is selected_card:
                 card.draw(surface, offset)
 
+        for particle in self.particles:
+            particle.draw(surface, offset)
+
     def selected_card(self):
         for card in self.cards:
             if card.selected:
                 return card
         return None
+
+    def use_selected(self):
+        selected = self.selected_card()
+        if selected and selected in self.cards:
+            self.cards.remove(selected)
+            if selected.crop not in (c.MULCH, c.BLOOD):
+                self.frame.discard.cards.append(selected)
+
+        for i in range(120):
+            x = selected.x + random.random() * c.CARD_WIDTH - c.CARD_WIDTH//2
+            y = selected.get_apparent_position()[1] + random.random() * c.CARD_HEIGHT - c.CARD_HEIGHT//2
+            self.particles.append(CardParticle((x, y), (x - selected.x, y - selected.get_apparent_position()[1])))
+        self.particles.append(RectParticle((selected.get_apparent_position())))
+
+        if not self.has_played_card:
+            self.has_played_card = True
+            self.frame.doctor.add_dialog([
+                "Very good. The crops have already taken root.",
+                "You have only limited space in this plot. Keep that in mind as you |place |your |remaining |crops.",
+                "I sense this will be a very beneficial relationship for both of us. Farewell for now."
+            ])
 
     def update(self, dt, events):
         for card in self.cards:
@@ -75,11 +133,16 @@ class Hand(Deck):
             dx = mx - cx
             dy = my - cy
             hovered = card.is_hovered(dx, dy)
-            if hovered and not found:
+            if hovered and not found and not self.frame.doctor.blocking():
                 card.start_hover()
                 found = True
             else:
                 card.stop_hover()
+
+        for particle in self.particles[:]:
+            particle.update(dt, events)
+            if particle.dead:
+                self.particles.remove(particle)
 
     def update_targets(self, dt, events):
         total = len(self.cards)

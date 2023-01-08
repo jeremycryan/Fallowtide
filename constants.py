@@ -24,7 +24,7 @@ EITHER = 2
 CARD_NAMES = {
     WHEAT: "Wheat",
     FENNEL: "Fennel",
-    FELLWEED: "Fellweed",
+    FELLWEED: "Hellweed",
     MULCH: "Mulch",
     BLOOD: "Blood",
     GOAT: "Goat",
@@ -32,9 +32,9 @@ CARD_NAMES = {
 }
 
 TILE_PRICES = {
-    WHEAT: 10,
-    FENNEL: 20,
-    FELLWEED: 50,
+    WHEAT: 100,
+    FENNEL: 400,
+    FELLWEED: 1200,
     MULCH: 0,
     BLOOD: 0,
     GOAT: 0,
@@ -47,3 +47,61 @@ CARD_SPACING = 15
 
 CARD_SHAPE_WIDTH = 70
 CARD_SHAPE_SPACING = 7
+
+HEALTHY = 0
+USED = 1
+BARREN = 2
+
+
+WHEAT_SHAPES = {
+
+}
+
+CROP_DESCRIPTIONS = {
+    FELLWEED: "Makes soil barren",
+    MULCH: "Replenish soil",
+    BLOOD: "All is forgiven",
+    GOAT: "Useless in this form"
+}
+
+COMPOSTS_TO = {
+    FELLWEED: MULCH,
+    GOAT: BLOOD,
+    WHEAT: MULCH,
+    FENNEL: MULCH,
+}
+
+SMALL_SHAPES = [
+    (((0, 0), (1, 0)), DOWN),
+    (((0, 0), (1, 0)), UP),
+    (((0, 0), (0, -1)), DOWN),
+]
+
+MEDIUM_SHAPES = [
+    (((0, 0), (0, -1), (1, 0), (-1, 0)), DOWN), # triforce
+    (((1, 0), (0, 0), (0, -1), (1, -1)), DOWN), # < pacman
+    (((0, 0), (1, 0), (1, -1), (0, -1)), UP), # > pacman
+    (((0, 0), (1, 0), (-1, 0), (2, 0), (-2, 0)), UP),
+    (((0, 0), (1, 0), (-1, 0), (2, 0), (-2, 0)), DOWN),
+    (((0, 0), (1, 0), (1, 1), (2, 1), (3, 1)), DOWN),
+    (((1, 0), (0, 0), (0, 1), (-1, 1), (-2, 1)), UP),
+]
+
+LARGE_SHAPES = [
+    (((0, 0), (1, 0), (-1, 0), (2, 0), (0, 1), (-1, 1)), UP),
+    (((0, 0), (-1, 0), (1, 0), (-2, 0), (0, 1), (1, 1)), UP),
+    (((0, 0), (-1, 0), (1, 0), (-2, 0), (0, -1), (1, -1)), DOWN),
+    (((0, 0), (1, 0), (-1, 0), (2, 0), (0, -1), (-1, -1)), DOWN),
+    (((0, 0), (1, 0), (-1, 0), (1, 1), (0, 1), (-1, 1)), UP),
+    (((0, 0), (1, 0), (-1, 0), (-1, -1), (1, -1), (0, 1)), UP),
+    (((0, 0), (1, 0), (-1, 0), (-1, 1), (0, 1), (1, 1)), DOWN),
+    (((0, 0), (1, 0), (-1, 0), (-1, 1), (0, 1), (1, 1), (2, 1)), DOWN),
+    (((0, 0), (1, 0), (-1, 0), (-1, 1), (0, 1), (1, 1), (-2, 0)), DOWN),
+    (((0, 0), (1, 0), (-1, 0), (-1, -1), (1, -1), (-2, -1), (2, -1), (0, 1)), UP),
+    (((0, 0), (1, 0), (-1, 0), (-1, 1), (1, 1), (-2, 1), (2, 1), (0, -1)), DOWN),
+]
+
+BUY = 0
+REMOVE = 1
+
+CPS = 4000

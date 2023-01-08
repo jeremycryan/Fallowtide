@@ -4,6 +4,9 @@ import constants as c
 import math
 import random
 
+from particle import MulchParticle, BloodParticle
+
+
 class Field:
     def __init__(self, frame):
         self.width = 11
@@ -16,6 +19,8 @@ class Field:
 
         self.yoff = -110
         self.frame = frame
+
+        self.has_seen_barren = False
 
         Crop.initialize_crop_locations()
 
@@ -40,7 +45,10 @@ class Field:
             for x, tile in enumerate(row):
                 tile.update(dt, events)
 
+
     def check_for_clicks(self, dt, events):
+        if self.frame.doctor.blocking():
+            return
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
@@ -73,9 +81,43 @@ class Field:
             if should_nudge:
                 x -= 1
             crop_object = Crop(crop, self.tiles[y][x])
-            self.tiles[y][x].contents.append(crop_object)
+            if crop_object.crop_type not in (c.BLOOD, c.MULCH):
+                self.tiles[y][x].contents.append(crop_object)
 
-        self.frame.shake(12)
+
+        if crop == c.BLOOD:
+            shape = ((1, 0), (-1, 0), (2, 0), (-2, 0), (0, -1), (-1, -1), (1, -1), (1, 1), (0, 1), (-1, 1))
+            if hovered_tile.orientation == c.UP:
+                shape += ((-2, 1), (2, 1))
+            else:
+                shape += ((-2, -1), (2, -1))
+            for x, y in shape:
+                x0 = x
+                y0 = y
+                if (x0 + y0 + (hovered_tile.orientation == c.UP)) % 2 == 1:
+                    y0 += 1/6
+                else:
+                    y0 -= 1/6
+                dist = math.sqrt(x0**2 + y0**2)
+
+                x = x + hovered_tile.x
+                y = y + hovered_tile.y
+                if should_nudge:
+                    x -= 1
+                if y < 0 or x < 0:
+                    continue
+                try:
+                    tile = self.tiles[y][x]
+                    crop_object = Crop(crop, tile, delay=dist*0.25)
+                except IndexError:
+                    continue
+                if crop_object.crop_type not in (c.BLOOD, c.MULCH):
+                    self.tiles[y][x].contents.append(crop_object)
+
+
+
+        self.frame.shake(15)
+        self.frame.hand.use_selected()
 
     def draw(self, surf, offset=(0, 0)):
         x0 = c.WINDOW_WIDTH//2 - (self.width - 1) * self.tile_width / 4
@@ -120,6 +162,10 @@ class Field:
         if not hovered_tile:
             return False
 
+        if self.frame.hand.selected_card():
+            if self.frame.hand.selected_card().crop == c.GOAT:
+                return False
+
         nudge_x = 0
         if self.should_nudge(shape, orientation):
             nudge_x = -1
@@ -133,6 +179,8 @@ class Field:
                 return False
             tile = self.tiles[y][x]
             if tile.empty:
+                return False
+            if (tile.state == c.BARREN) and (not self.frame.hand.selected_card or not self.frame.hand.selected_card().crop in (c.BLOOD, c.MULCH)):
                 return False
             if len(tile.contents):
                 return False
@@ -165,38 +213,86 @@ class Field:
             py = y0 + y * self.tile_height
             tile.draw_highlight(surface, (px + offset[0], py + offset[1]), valid=valid)
 
+    def collect_cash(self):
+        for y, row in enumerate(self.tiles):
+            for x, tile in enumerate(row):
+                if tile.contents:
+                    for crop in tile.contents:
+                        crop_type = crop.crop_type
+                        self.frame.cash += c.TILE_PRICES[crop_type]
+                        self.frame.lifetime_cash += c.TILE_PRICES[crop_type]
+
+    def next_day(self):
+        for y, row in enumerate(self.tiles):
+            for x, tile in enumerate(row):
+                if tile.contents:
+                    tile.reduce(1)
+                    if c.FELLWEED in [crop.crop_type for crop in tile.contents]:
+                        tile.state = c.BARREN
+                    if not self.has_seen_barren and tile.state == c.BARREN:
+                        self.frame.doctor.add_dialog([
+                            "Alas, some of your soil has become |barren. As long as the ground is dry and cracked, crops will be unable to grow there.",
+                            "Despair not! This is best avoided, but not beyond fixing.",
+                            "If you |leave |that |soil |empty for a season, it may become fertile once more.",
+                        ])
+                        self.has_seen_barren = True
+                    tile.contents = []
+                else:
+                    tile.fallow()
+        self.frame.moon += 1
+
 
 class Tile:
     def __init__(self, contents=None, x=0, y=0):
         self.contents = [] if contents is None else contents
         self.empty = False
+        self.state = c.HEALTHY
         if (x < 3 or x > 7) and (y == 0 or y == 3):
             self.empty = True
         self.x = x
         self.y = y
         self.orientation = c.UP
 
-        self.surf = ImageManager.load("assets/images/placeholder_tile.png")
+        self.healthy_surf = ImageManager.load("assets/images/placeholder_tile.png")
+        self.surf = self.healthy_surf
+        self.used_surf = ImageManager.load("assets/images/used_soil.png")
+        self.barren_surf = ImageManager.load("assets/images/barren_soil.png")
+        self.surfs = {
+            c.BARREN: self.barren_surf,
+            c.USED: self.used_surf,
+            c.HEALTHY: self.surf,
+        }
         self.highlight_surf = ImageManager.load("assets/images/tile_highlight.png")
         self.bad_highlight_surf = ImageManager.load("assets/images/tile_bad_highlight.png")
         self.vertical_offset = 0
         if (x + y)%2 != c.UP:
             self.orientation = c.DOWN
             self.vertical_offset *= -1
-            self.surf = pygame.transform.flip(self.surf, False, True)
+            for key in self.surfs:
+                self.surfs[key] = pygame.transform.flip(self.surfs[key], False, True)
             self.highlight_surf = pygame.transform.flip(self.highlight_surf, False, True)
             self.bad_highlight_surf = pygame.transform.flip(self.bad_highlight_surf, False, True)
         self.hovered = False
+
+        self.particles = []
 
     def update(self, dt, events):
         if self.empty:
             return
         for item in self.contents:
             item.update(dt, events)
+        for particle in self.particles[:]:
+            particle.update(dt, events)
+            if particle.dead:
+                self.particles.remove(particle)
 
     def hovered_by(self, x, y):
         if self.empty:
             return False
+
+        if self.orientation == c.DOWN:
+            y *= -1
+
         x += self.surf.get_width()//2
         y += self.surf.get_height()//2
         if x < 0 or x > self.surf.get_width()-1:
@@ -212,7 +308,10 @@ class Tile:
         y = offset[1] - self.surf.get_height()//2 + self.vertical_offset
         if self.empty:
             return
-        surf.blit(self.surf, (x, y))
+        surf.blit(self.surfs[self.state], (x, y))
+
+        for particle in self.particles:
+            particle.draw(surf, offset)
 
     def draw_contents(self, surf, offset=(0, 0)):
         for item in self.contents:
@@ -228,8 +327,26 @@ class Tile:
         else:
             surf.blit(self.bad_highlight_surf, (x, y))
 
+    def reduce(self, amt=1):
+        if amt > 1:
+            self.state = c.BARREN
+            return
+        if self.state == c.USED:
+            self.state = c.BARREN
+            return
+        if self.state == c.HEALTHY:
+            self.state = c.USED
+            return
+
+    def fallow(self):
+        if self.state == c.BARREN:
+            self.state = c.USED
+        else:
+            self.state = c.HEALTHY
+
 class Crop:
     WHEAT_LOCATIONS = None
+    FENNEL_LOCATIONS = None
 
     @staticmethod
     def initialize_crop_locations():
@@ -237,38 +354,61 @@ class Crop:
         wheat_key = ImageManager.load("assets/images/wheat_spawn_key.png")
         for x in range(wheat_key.get_width()):
             for y in range(wheat_key.get_height()):
-                print(wheat_key.get_width(), wheat_key.get_height(), x, y)
                 if wheat_key.get_at((x, y)) == (0, 0, 0, 255):
                     px = x-wheat_key.get_width()//2
                     py = y + wheat_key.get_width()//math.sqrt(3) - wheat_key.get_width()
                     points.append((px, py))
         Crop.WHEAT_LOCATIONS = tuple(points)
+
+        fennel_key = ImageManager.load("assets/images/fennel_spawn.png")
+        points = []
+        for x in range(fennel_key.get_width()):
+            for y in range(fennel_key.get_height()):
+                if fennel_key.get_at((x, y)) == (0, 0, 0, 255):
+                    px = x-fennel_key.get_width()//2
+                    py = y + fennel_key.get_width()//math.sqrt(3) - fennel_key.get_width()
+                    points.append((px, py))
+        Crop.FENNEL_LOCATIONS = tuple(points)
         pass
 
-    def __init__(self, crop_enum, tile):
+    def __init__(self, crop_enum, tile, delay=0.0):
         self.crop_type = crop_enum
 
         self.surf = ImageManager.load("assets/images/wheat.png")
+        if self.crop_type == c.FENNEL:
+            self.surf = ImageManager.load("assets/images/fennel.png")
         if tile.orientation == c.DOWN:
             self.surf = pygame.transform.flip(self.surf, False, True)
         self.orientation = tile.orientation
 
         self.pieces = []
         self.add_pieces()
+
+        if self.crop_type == c.MULCH:
+            tile.state = c.HEALTHY
+            tile.particles.append(MulchParticle(tile))
+
+        if self.crop_type == c.BLOOD:
+            #tile.state = c.HEALTHY
+            tile.particles.append(BloodParticle(tile, delay))
         pass
 
     def add_pieces(self):
+        if self.crop_type in (c.MULCH, c.BLOOD):
+            return
         locations = Crop.WHEAT_LOCATIONS
+        if self.crop_type == c.FENNEL:
+            locations = Crop.FENNEL_LOCATIONS
         if self.orientation != c.UP:
             locations = tuple([(x, -y) for (x, y) in locations])
-        if self.crop_type == c.WHEAT:
-            for x, y in locations:
-                self.pieces.append(CropPiece(self, (x, y)))
+        for x, y in locations:
+            self.pieces.append(CropPiece(self, (x, y)))
         self.pieces.sort(key=lambda p: p.y)
 
     def update(self, dt, events):
         for piece in self.pieces:
             piece.update(dt, events)
+
 
     def draw(self, surface, offset=(0, 0)):
         x = offset[0] - self.surf.get_width()//2
@@ -290,6 +430,10 @@ class CropPiece:
         self.update(0.01, [])
 
         self.surf = ImageManager.load("assets/images/wheat_strand.png")
+        if self.crop.crop_type == c.FENNEL:
+            self.surf = ImageManager.load("assets/images/fennel.png")
+        if self.crop.crop_type == c.FELLWEED:
+            self.surf = ImageManager.load("assets/images/fellweed.png")
 
     def update(self, dt, events):
         self.age += dt
