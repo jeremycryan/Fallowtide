@@ -1,7 +1,7 @@
 import math
 import pygame
 
-DEBUG = False
+DEBUG = True
 
 WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
@@ -62,8 +62,8 @@ CROP_DESCRIPTIONS = {
     FELLWEED: "Makes soil barren",
     MULCH: "Replenish soil",
     BLOOD: "All is forgiven",
-    GOAT: "Useless in this form",
-    CULTIST: "It must be willing"
+    GOAT: "Life from death",
+    CULTIST: "A willing sacrifice",
 }
 
 COMPOSTS_TO = {

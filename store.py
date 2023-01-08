@@ -178,14 +178,14 @@ class Store:
     def get_shop_card(self):
         options = []
 
-        multiplier = 1.7 if not c.DEBUG else 0.1
+        multiplier = 1.6
 
 
         if self.frame.lifetime_cash < 2000 * multiplier:
             shape, orientation = random.choice(c.MEDIUM_SHAPES)
             options.append(Card(c.WHEAT, shape=shape, orientation=orientation))
 
-        if self.frame.lifetime_cash > 750  * multiplier and self.frame.lifetime_cash < 4000  * multiplier:
+        if self.frame.lifetime_cash > 900  * multiplier and self.frame.lifetime_cash < 4000  * multiplier:
             shape, orientation = random.choice(c.LARGE_SHAPES)
             options.append(Card(c.WHEAT, shape=shape, orientation=orientation))
 
@@ -201,25 +201,25 @@ class Store:
             shape, orientation = random.choice(c.LARGE_SHAPES)
             options.append(Card(c.FENNEL, shape=shape, orientation=orientation))
 
-        if self.frame.lifetime_cash > 12000  * multiplier and self.frame.lifetime_cash < 50000  * multiplier:
+        if self.frame.lifetime_cash > 9000  * multiplier and self.frame.lifetime_cash < 50000  * multiplier:
             shape, orientation = random.choice(c.SMALL_SHAPES)
             options.append(Card(c.FELLWEED, shape=shape, orientation=orientation))
 
-        if self.frame.lifetime_cash > 24000  * multiplier and self.frame.lifetime_cash < 100000  * multiplier:
+        if self.frame.lifetime_cash > 12000  * multiplier and self.frame.lifetime_cash < 100000  * multiplier:
             shape, orientation = random.choice(c.MEDIUM_SHAPES)
             options.append(Card(c.FELLWEED, shape=shape, orientation=orientation))
 
-        if self.frame.lifetime_cash > 48000 * multiplier:
+        if self.frame.lifetime_cash > 24000 * multiplier:
             shape, orientation = random.choice(c.LARGE_SHAPES)
             options.append(Card(c.FELLWEED, shape=shape, orientation=orientation))
 
-        if self.frame.lifetime_cash > 16000 * multiplier:
+        if self.frame.lifetime_cash > 10000 * multiplier:
             options.append(Card(c.GOAT, shape=((0, 0),), orientation=c.EITHER))
 
         if not options:
             options.append(Card(c.WHEAT, shape=((0, 0),), orientation=c.UP))
 
-        if self.frame.lifetime_cash > 75000 * multiplier:
+        if self.frame.lifetime_cash > 30000 * multiplier:
             return Card(c.CULTIST, shape=((0, 0),), orientation=c.EITHER)
 
         new_card = random.choice(options)

@@ -164,7 +164,7 @@ class Field:
             return False
 
         if self.frame.hand.selected_card():
-            if self.frame.hand.selected_card().crop == c.GOAT:
+            if self.frame.hand.selected_card().crop in (c.GOAT, c.CULTIST):
                 return False
 
         nudge_x = 0
@@ -222,8 +222,6 @@ class Field:
                         crop_type = crop.crop_type
 
                         cash = c.TILE_PRICES[crop_type]
-                        if c.DEBUG:
-                            cash *= 10
                         self.frame.cash += cash
                         self.frame.lifetime_cash += cash
 

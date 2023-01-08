@@ -226,7 +226,7 @@ class Card:
         if self.crop == c.GOAT:
             return 5000
         elif self.crop == c.CULTIST:
-            return 12000
+            return 8000
         else:
             value = self.value*2.5
             if self.crop == c.FELLWEED:

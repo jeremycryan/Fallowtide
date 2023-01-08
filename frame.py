@@ -155,8 +155,6 @@ class GameFrame(Frame):
                 self.end_shade_alpha = 255
                 self.next_frame_obj = WinFrame(self.game)
 
-
-
         self.since_shake += dt
         self.shake_amp *= 0.002**dt
         if self.shake_amp > 0:
