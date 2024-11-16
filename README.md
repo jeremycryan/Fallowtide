@@ -1,3 +1,10 @@
+# I'm turning this into a real game!
+
+**Moonsigil Atlas** uses the same triangular grid resource system as Fallowtide, but in the context of a more traditional deckbuilding roguelike experience. If you're interested in getting updates on development, join the Discord by clicking the banner!
+
+[![Moonsigil_DiscordBanner](https://github.com/user-attachments/assets/516691bf-0ad6-42c9-a8ca-55d3f016f2a2)](https://discord.gg/fFWPpFeTwQ)
+
+
 ![Fallowtide](assets/images/ldsplash.png)
 
 # Fallowtide
